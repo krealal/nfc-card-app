@@ -1,0 +1,11 @@
+# Node / build
+node_modules/
+dist/
+.aws-sam/
+*.log
+
+# macOS
+.DS_Store
+
+# Env files
+.env
