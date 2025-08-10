@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: NFC Card API - SAM template
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    MemorySize: 256
+    Timeout: 10
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        NODE_OPTIONS: --enable-source-maps
+        DB_NAME: !Ref DbName
+        MONGO_URI: !Ref MongoUri
+        ADMIN_API_KEY: !Ref AdminApiKey
+
+Parameters:
+  MongoUri:
+    Type: String
+    Description: MongoDB connection string
+  DbName:
+    Type: String
+    Default: nfc
+  AdminApiKey:
+    Type: String
+    NoEcho: true
+    Description: API key to protect admin routes
+
+Resources:
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors: "*"
+
+  GetEntryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist
+      Handler: handlers/getEntry.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /{id}
+            Method: get
+
+  PutAdminUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist
+      Handler: handlers/adminPutUser.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/users/{id}
+            Method: put
+
+  PostAdminMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist
+      Handler: handlers/adminPostMessage.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/messages
+            Method: post
+
+Outputs:
+  ApiUrl:
+    Description: API endpoint base URL
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod"
+
