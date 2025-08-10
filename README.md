@@ -1,11 +1,10 @@
 # NFC Card API
 
-TypeScript serverless API that powers NFC wristbands/cards. Each wristband encodes a short path like `/abc123`; the API looks up the user and returns a random active message from that user's collection. Admin endpoints let you upsert users and bulk-insert messages. MongoDB is used in cloud, with an in-memory mock for local dev.
+TypeScript serverless API that powers NFC wristbands/cards. Each wristband encodes a short path like `/abc123`; the API looks up the user and returns a random active message from that user's collection. Admin endpoints let you upsert users and bulk-insert messages. MongoDB is used in cloud.
 
 ### Highlights
 - TypeScript Lambdas (Node.js 20) behind API Gateway using AWS SAM
 - MongoDB persistence with recommended indexes
-- In-memory DB mock for local development (no Mongo required)
 - Minimal functional handlers and clear types
 
 ## Architecture
@@ -16,21 +15,13 @@ flowchart LR
     APIGW --> GET["getEntry Lambda"]
     APIGW --> PUTU["adminPutUser Lambda"]
     APIGW --> POSTM["adminPostMessage Lambda"]
-    GET --> MDB[("MongoDB")]
+    GET --> MDB[("MongoDB (Atlas)")]
     PUTU --> MDB
     POSTM --> MDB
   end
-
-  subgraph Local Dev
-    Client --> LEXP["Express Local Server"]
-    LEXP --> LGET["getEntry handler"]
-    LEXP --> LPUT["adminPutUser handler"]
-    LEXP --> LPOST["adminPostMessage handler"]
-    LGET --> LMEM[("In-memory DB mock")]
-    LPUT --> LMEM
-    LPOST --> LMEM
-  end
 ```
+
+Note: An Express server under `src/local` is provided for optional local debugging only. Production traffic always goes through API Gateway + Lambda.
 
 ## Data model
 - `users` (1 doc per wristband)
@@ -53,7 +44,7 @@ interface IMessageDoc {
 }
 ```
 
-Recommended indexes:
+Recommended indexes (run once in Mongo):
 ```js
 // in Mongo shell
 // unique path per wristband
@@ -69,34 +60,19 @@ db.messages.createIndex({ messageId: 1 });
 - `MONGO_URI` (cloud): MongoDB connection string
 - `DB_NAME` (cloud): database name (e.g. `nfc`)
 - `ADMIN_API_KEY`: required for admin endpoints
-- `MONGO_MOCK` (local): `true` to use in-memory DB
-- `PORT` (local): Express port (default `3000`)
+- `PORT` (local, optional): Express port (default `3000`)
 
 A starter file is provided: `.env.example`
 
-## Getting started (local, no DB needed)
-Requirements: Node 18+ (Node 20 recommended), Yarn.
+## Local debugging (optional)
+If you want to test handlers locally against your real MongoDB:
 
 ```bash
-# install deps
 yarn
-
-# run local server with in-memory DB
-yarn run:local
-# -> http://localhost:3000
+yarn run:local  # http://localhost:3000
 ```
 
-You should see logs like:
-```
-[local] Using in-memory Mongo mock (MONGO_MOCK=true)
-[local] Admin API key set? yes
-Local server running on http://localhost:3000
-```
-
-Health check:
-```
-GET http://localhost:3000/health
-```
+Health check: `GET http://localhost:3000/health`
 
 ### Example workflow (cURL)
 1) Upsert a user
@@ -130,7 +106,7 @@ curl "http://localhost:3000/abc123?category=optimism"
 ```
 
 ## API Reference
-Base URL (local): `http://localhost:3000`
+Base URL (cloud): `https://<api-id>.execute-api.<region>.amazonaws.com/prod`
 
 - GET `/:id`
   - Query: `category?` (string)
@@ -182,9 +158,7 @@ sam deploy --guided
 # - AdminApiKey (choose a strong random value)
 ```
 
-Output includes the base API URL, e.g. `https://<api-id>.execute-api.<region>.amazonaws.com/prod`.
-
-Production requests:
+Output includes the base API URL. Example production requests:
 - `GET https://<api>/prod/{id}`
 - `PUT https://<api>/prod/admin/users/{id}` (with header `x-api-key: <AdminApiKey> you set`)
 - `POST https://<api>/prod/admin/messages` (with header `x-api-key`)
