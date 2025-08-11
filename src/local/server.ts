@@ -6,6 +6,8 @@ dotenv.config();
 import { handler as getEntry } from "../handlers/getEntry";
 import { handler as adminPutUser } from "../handlers/adminPutUser";
 import { handler as adminPostMessage } from "../handlers/adminPostMessage";
+import { handler as getProfile } from "../handlers/getProfile";
+import { handler as getMessage } from "../handlers/getMessage";
 
 const app = express();
 app.use(bodyParser.json());
@@ -38,6 +40,8 @@ const adapt = (
 app.get("/:id", adapt(getEntry as any));
 app.put("/admin/users/:id", adapt(adminPutUser as any));
 app.post("/admin/messages", adapt(adminPostMessage as any));
+app.get("/profile/:id", adapt(getProfile as any));
+app.get("/message/:id", adapt(getMessage as any));
 app.get("/health", (_req, res) => {
   res.json({ ok: true, mock: process.env.MONGO_MOCK === "true" || process.env.MONGO_MOCK === "1" });
 });
