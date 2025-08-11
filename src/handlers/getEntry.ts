@@ -22,20 +22,20 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   try {
     const id = event.pathParameters?.id?.trim();
     if (!id || id.length > 128) {
-      return { statusCode: 400, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "Invalid or missing 'id'" }) };
+      return { statusCode: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "Invalid or missing 'id'" }) };
     }
 
     const category = event.queryStringParameters?.category?.trim();
     const user = await fetchUserById(id);
     if (!user) {
-      return { statusCode: 404, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "User not found" }) };
+      return { statusCode: 404, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "User not found" }) };
     }
 
     switch ((user.response ?? "default") as ResponseKind) {
       case "default": {
         const msg = await fetchRandomMessage(user.id, category);
         if (!msg) {
-          return { statusCode: 404, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "No active messages for this user" }) };
+          return { statusCode: 404, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "No active messages for this user" }) };
         }
         return {
           statusCode: 200,
@@ -49,16 +49,16 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       }
 
       case "static":
-        return { statusCode: 501, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "static not implemented yet" }) };
+        return { statusCode: 501, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "static not implemented yet" }) };
 
       case "redirect":
       case "json":
       default:
-        return { statusCode: 501, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: `Response type not implemented: ${user.response}` }) };
+        return { statusCode: 501, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: `Response type not implemented: ${user.response}` }) };
     }
   } catch (err: any) {
     console.error(err);
-    return { statusCode: 500, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "Internal Server Error" }) };
+    return { statusCode: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "Internal Server Error" }) };
   }
 };
 

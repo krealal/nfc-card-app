@@ -4,7 +4,7 @@ import { IMessageDoc } from "../types";
 
 const unauthorized = (): APIGatewayProxyResult => ({
   statusCode: 401,
-  headers: { "Content-Type": "application/json" },
+  headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
   body: JSON.stringify({ error: "Unauthorized" })
 });
 
@@ -14,7 +14,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (!apiKey || apiKey !== process.env.ADMIN_API_KEY) return unauthorized();
 
     if (!event.body) {
-      return { statusCode: 400, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "Missing body" }) };
+      return { statusCode: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "Missing body" }) };
     }
 
     const payload = JSON.parse(event.body) as Partial<IMessageDoc> | Partial<IMessageDoc>[];
@@ -22,7 +22,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     for (const doc of docs) {
       if (!doc?.userId || !doc?.category || !doc?.text) {
-        return { statusCode: 400, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "Fields required: userId, category, text" }) };
+        return { statusCode: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "Fields required: userId, category, text" }) };
       }
     }
 
@@ -40,12 +40,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     return {
       statusCode: 201,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({ insertedCount: result.insertedCount })
     };
   } catch (err: any) {
     console.error(err);
-    return { statusCode: 500, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "Internal Server Error" }) };
+    return { statusCode: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "Internal Server Error" }) };
   }
 };
 

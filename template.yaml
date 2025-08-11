@@ -33,16 +33,13 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: prod
-      Cors:
-        AllowOrigin: "'*'"
-        AllowHeaders: "'*'"
-        AllowMethods: "'OPTIONS,GET,PUT,POST'"
+      Cors: "'*'"
 
   GetEntryFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist
-      Handler: handlers/getEntry.handler
+      CodeUri: .
+      Handler: dist/handlers/getEntry.handler
       Events:
         Api:
           Type: Api
@@ -50,12 +47,13 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /{id}
             Method: get
+    
 
   PutAdminUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist
-      Handler: handlers/adminPutUser.handler
+      CodeUri: .
+      Handler: dist/handlers/adminPutUser.handler
       Events:
         Api:
           Type: Api
@@ -63,12 +61,13 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /admin/users/{id}
             Method: put
+    
 
   PostAdminMessageFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist
-      Handler: handlers/adminPostMessage.handler
+      CodeUri: .
+      Handler: dist/handlers/adminPostMessage.handler
       Events:
         Api:
           Type: Api
@@ -76,9 +75,9 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /admin/messages
             Method: post
+    
 
 Outputs:
   ApiUrl:
     Description: API endpoint base URL
     Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod"
-
