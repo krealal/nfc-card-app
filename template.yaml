@@ -12,23 +12,34 @@ Globals:
     Environment:
       Variables:
         NODE_OPTIONS: --enable-source-maps
-        DB_NAME: !Ref DbName
-        MONGO_URI: !Ref MongoUri
-        ADMIN_API_KEY: !Ref AdminApiKey
-
-Parameters:
-  MongoUri:
-    Type: String
-    Description: MongoDB connection string
-  DbName:
-    Type: String
-    Default: nfc
-  AdminApiKey:
-    Type: String
-    NoEcho: true
-    Description: API key to protect admin routes
+        DB_NAME: '{{resolve:ssm:/NFC-CARD-APP/DB_NAME}}'
+        MONGO_URI: '{{resolve:ssm:/NFC-CARD-APP/MONGO_URI}}'
+        ADMIN_API_KEY: '{{resolve:ssm:/NFC-CARD-APP/ADMIN_API_KEY}}'
 
 Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: ParameterStoreAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource: 
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/NFC-CARD-APP/*"
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
@@ -40,6 +51,7 @@ Resources:
     Properties:
       CodeUri: dist/
       Handler: handlers/getEntry.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         Api:
           Type: Api
@@ -53,6 +65,7 @@ Resources:
     Properties:
       CodeUri: dist/
       Handler: handlers/adminPutUser.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         Api:
           Type: Api
@@ -66,6 +79,7 @@ Resources:
     Properties:
       CodeUri: dist/
       Handler: handlers/adminPostMessage.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         Api:
           Type: Api
