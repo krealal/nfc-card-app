@@ -146,22 +146,76 @@ yarn build
 ## Deploy (AWS SAM)
 Make sure you have the AWS CLI and SAM CLI configured.
 
+### Prerequisites
+1. Install AWS CLI and configure credentials
+2. Install SAM CLI
+3. Ensure you have Node.js and Yarn installed
+
+### Deployment Steps
 ```bash
-# build (uses template.yaml)
+# 1. Install dependencies and build TypeScript
+yarn install
+yarn build
+
+# 2. Build SAM application (packages Lambda functions with dependencies)
 sam build
 
-# first-time guided deploy (enters params):
+# 3. Deploy
+# Option A: First-time guided deploy
 sam deploy --guided
-# Parameters you will be asked for:
-# - MongoUri (e.g. mongodb+srv://...)
-# - DbName (e.g. nfc)
-# - AdminApiKey (choose a strong random value)
+
+# Option B: Quick deploy with parameters
+sam deploy --parameter-overrides \
+  AdminApiKey=your-secret-key \
+  MongoUri="mongodb+srv://user:pass@cluster.mongodb.net/?retryWrites=true&w=majority"
 ```
 
+### Parameters
+- **MongoUri**: MongoDB connection string (e.g. `mongodb+srv://...`)
+- **DbName**: Database name (default: `nfc`)
+- **AdminApiKey**: Choose a strong random value for admin endpoint protection
+
+### Build Process
+The build script automatically:
+- Compiles TypeScript to JavaScript in `dist/` directory
+- Generates a `package.json` with production dependencies (`mongodb`)
+- SAM packages Lambda functions with `node_modules` for proper runtime execution
+
+### Important Notes
+- SAM automatically installs Node.js dependencies during the build process
+- The `dist/` directory contains compiled code and a minimal `package.json` for Lambda runtime
+- Dependencies are properly bundled to avoid `Cannot find module` errors in CloudWatch
+
 Output includes the base API URL. Example production requests:
-- `GET https://<api>/prod/{id}`
-- `PUT https://<api>/prod/admin/users/{id}` (with header `x-api-key: <AdminApiKey> you set`)
-- `POST https://<api>/prod/admin/messages` (with header `x-api-key`)
+- `GET https://<api-id>.execute-api.<region>.amazonaws.com/prod/{id}`
+- `PUT https://<api-id>.execute-api.<region>.amazonaws.com/prod/admin/users/{id}` (with header `x-api-key: <AdminApiKey>`)
+- `POST https://<api-id>.execute-api.<region>.amazonaws.com/prod/admin/messages` (with header `x-api-key: <AdminApiKey>`)
+
+## Troubleshooting
+
+### Common Deployment Issues
+
+**"Cannot find module 'mongodb'" in CloudWatch logs**
+- Solution: Make sure you run `yarn build` before `sam build` to generate the proper `package.json` in `dist/`
+- The build process creates a minimal `package.json` with MongoDB dependency for Lambda runtime
+
+**"Stack is in ROLLBACK_COMPLETE state and cannot be updated"**
+- Solution: Delete the failed stack and redeploy
+```bash
+aws cloudformation delete-stack --stack-name nfc-card-app --region <your-region>
+# Wait for deletion to complete, then redeploy
+sam deploy --parameter-overrides AdminApiKey=<key> MongoUri="<uri>"
+```
+
+**"Parameters: [MongoUri] must have values"**
+- Solution: Provide all required parameters during deployment
+```bash
+sam deploy --parameter-overrides AdminApiKey=<key> MongoUri="<uri>" DbName="nfc"
+```
+
+**API Gateway deployment fails with "The REST API doesn't contain any methods"**
+- This was a known issue with the SAM template structure that has been fixed
+- Make sure you're using the latest version of the template
 
 ## Notes
 - Random message selection uses `$sample` in Mongo. If a user has very large message sets and you need tighter performance, consider precomputed sampling or a count+skip approach.
