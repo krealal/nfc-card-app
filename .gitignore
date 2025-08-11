@@ -9,3 +9,5 @@ dist/
 
 # Env files
 .env
+
+samconfig.toml
