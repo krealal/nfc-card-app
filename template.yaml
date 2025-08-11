@@ -33,7 +33,10 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: prod
-      Cors: "*"
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'*'"
+        AllowMethods: "'OPTIONS,GET,PUT,POST'"
 
   GetEntryFunction:
     Type: AWS::Serverless::Function
