@@ -38,8 +38,8 @@ Resources:
   GetEntryFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
-      Handler: dist/handlers/getEntry.handler
+      CodeUri: dist/
+      Handler: handlers/getEntry.handler
       Events:
         Api:
           Type: Api
@@ -47,13 +47,12 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /{id}
             Method: get
-    
 
   PutAdminUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
-      Handler: dist/handlers/adminPutUser.handler
+      CodeUri: dist/
+      Handler: handlers/adminPutUser.handler
       Events:
         Api:
           Type: Api
@@ -61,13 +60,12 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /admin/users/{id}
             Method: put
-    
 
   PostAdminMessageFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
-      Handler: dist/handlers/adminPostMessage.handler
+      CodeUri: dist/
+      Handler: handlers/adminPostMessage.handler
       Events:
         Api:
           Type: Api

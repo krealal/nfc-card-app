@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "yarn clean && tsc",
+    "build": "yarn clean && tsc && echo '{\"name\":\"nfc-card-lambda\",\"version\":\"0.1.0\",\"dependencies\":{\"mongodb\":\"^6.8.0\"}}' > dist/package.json",
     "typecheck": "tsc --noEmit",
     "dev": "NODE_OPTIONS='--enable-source-maps' ts-node src/local/server.ts",
     "run:local": "ADMIN_API_KEY=dev PORT=3000 NODE_OPTIONS='--enable-source-maps' ts-node src/local/server.ts",
@@ -28,5 +28,6 @@
     "esbuild": "^0.25.8",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
-  }
+  },
+  "packageManager": "yarn@4.9.2"
 }
